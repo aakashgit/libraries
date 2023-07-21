@@ -3,7 +3,7 @@ sap.ui.define([
 	"sap/m/GroupHeaderListItem",
 	"sap/m/GroupHeaderListItemRenderer"
 ], function (coreLibrary, GroupHeaderListItem, GroupHeaderListItemRenderer) {
-	return GroupHeaderListItem.extend("req.stores.codan.customControl.ExtendedGroupHeaderListItem", {
+	return GroupHeaderListItem.extend("namespace.controls.ExtendedGroupHeaderListItem", {
 		metadata: {
 			aggregations: {
 				rightButton: {
