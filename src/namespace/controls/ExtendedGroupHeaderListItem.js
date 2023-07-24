@@ -3,7 +3,7 @@ sap.ui.define([
 	"sap/m/GroupHeaderListItem",
 	"sap/m/GroupHeaderListItemRenderer"
 ], function (coreLibrary, GroupHeaderListItem, GroupHeaderListItemRenderer) {
-	return GroupHeaderListItem.extend("namespace.controls.ExtendedGroupHeaderListItem", {
+	return GroupHeaderListItem.extend("namespace.customControl.ExtendedGroupHeaderListItem", {
 		metadata: {
 			aggregations: {
 				rightButton: {
@@ -18,6 +18,19 @@ sap.ui.define([
 		renderer: {
 			renderLIContent: function (rm, oControl) {
 				var sTextDir = oControl.getTitleTextDirection();
+
+				rm.write("<span");
+				rm.addClass("sapMBtn");
+
+				rm.writeClasses();
+				if (sTextDir != coreLibrary.TextDirection.Inherit) {
+					rm.attr("dir", sTextDir.toLowerCase());
+				}
+
+				rm.write(">");
+				rm.renderControl(oControl.getRightButton());
+				rm.write("</span>");
+
 				rm.write("<span");
 				rm.addClass("sapMGHLITitle");
 				rm.writeClasses();
@@ -27,18 +40,6 @@ sap.ui.define([
 
 				rm.write(">");
 				rm.write(oControl.getTitle());
-				rm.write("</span>");
-
-				rm.write("<span");
-				rm.addClass("sapMBtn");
-				rm.addClass("floatRight");
-				rm.writeClasses();
-				if (sTextDir != coreLibrary.TextDirection.Inherit) {
-					rm.attr("dir", sTextDir.toLowerCase());
-				}
-
-				rm.write(">");
-				rm.renderControl(oControl.getRightButton());
 				rm.write("</span>");
 
 				var iCount = oControl.getCount() || oControl.getCounter();
