@@ -14,25 +14,32 @@ sap.ui.define([
 	"sap/ui/core/Core",
 	"sap/m/ResponsivePopover",
 	"sap/ui/core/IconPool",
-	"sap/m/Title"	
+	"sap/m/Title"
 ], function (Object, MessageBox, MessageType, MessageItem, MessageView, JSONModel, Dialog, Button, Bar, Text, Message,
 	ControlMessageProcessor, Core, ResponsivePopover, IconPool, Title) {
 	"use strict";
-	return Object.extend("namespace.libraries.controls.ErrorHandler", {
+	return Object.extend("codan.libraries.controls.ErrorHandler", {
 		constructor: function (oComponent, models) {
 			if (oComponent) {
 				this.Parent = oComponent;
-				this._oResourceBundle = oComponent.getModel("i18n").getResourceBundle();
 				this._oComponent = oComponent;
 				this._bMessageOpen = false;
-				this._sErrorText = this._oResourceBundle.getText("errorText");
+				this._oResourceBundle = undefined;
+				try {
+					this._oResourceBundle = oComponent.getModel("i18n").getResourceBundle();
+				} catch (err) {
+					this._sErrorText = "Error";
+				}
+				if (this._oResourceBundle) {
+					this._sErrorText = this._oResourceBundle.getText("errorText");
+				}
 			}
 			// //Initiate message manager
 			this.messageProcessor = new ControlMessageProcessor();
 			this.messageManager = Core.getMessageManager();
 			this.messageManager.registerMessageProcessor(this.messageProcessor);
 			this.markUpDescription = false; //By default disabling HTML content
-			
+
 			const attachModel = (model) => {
 				model.attachMetadataFailed(function (oEvent) {
 					const oParams = oEvent.getParameters();
@@ -45,7 +52,7 @@ sap.ui.define([
 					// We already cover this case with a notFound target so we skip it here.
 					// A request that cannot be sent to the server is a technical error that we have to handle though
 					if (oParams.response.statusCode !== "404" || (oParams.response.statusCode === 404 && oParams.response.responseText.indexOf(
-							"Cannot POST") === 0)) {
+						"Cannot POST") === 0)) {
 						this._showServiceError(oParams.response);
 					}
 				}, this);
@@ -55,13 +62,13 @@ sap.ui.define([
 					attachModel(row);
 				});
 			}
-			
+
 			/*   Methods to be consumed by the calling Projects */
 			this.removeAllMessages = () => { //Exposed to be called from child projects
 				this.messageManager.removeAllMessages(); //remove all messages
 			};
 			//To open popover message view when Message handler footer button is clicked
-			this.onMessagesButtonPress = (evt, delegate) =>{
+			this.onMessagesButtonPress = (evt, delegate) => {
 				this._onMessagesButtonPress(evt, delegate);
 			};
 		},
@@ -117,13 +124,12 @@ sap.ui.define([
 			this._bMessageOpen = true;
 			MessageBox.error(
 				message, {
-					id: "serviceErrorMessageBox",
-					styleClass: this._oComponent.getContentDensityClass(),
-					actions: [MessageBox.Action.CLOSE],
-					onClose: function () {
-						this._bMessageOpen = false;
-					}.bind(this)
-				}
+				id: "serviceErrorMessageBox",
+				actions: [MessageBox.Action.CLOSE],
+				onClose: function () {
+					this._bMessageOpen = false;
+				}.bind(this)
+			}
 			);
 		},
 
@@ -134,14 +140,13 @@ sap.ui.define([
 			this._bMessageOpen = true;
 			MessageBox.error(
 				this._sErrorText, {
-					id: "serviceErrorMessageBox",
-					details: message,
-					styleClass: this._oComponent.getContentDensityClass(),
-					actions: [MessageBox.Action.CLOSE],
-					onClose: function () {
-						this._bMessageOpen = false;
-					}.bind(this)
-				}
+				id: "serviceErrorMessageBox",
+				details: message,
+				actions: [MessageBox.Action.CLOSE],
+				onClose: function () {
+					this._bMessageOpen = false;
+				}.bind(this)
+			}
 			);
 		},
 
@@ -252,6 +257,10 @@ sap.ui.define([
 					],
 					contentLeft: [oBackButton]
 				}),
+				escapeHandler: (handler) => {
+					this._bMessageOpen = false;
+					handler.resolve();
+				},
 				contentHeight: "400px",
 				contentWidth: "500px",
 				verticalScrolling: false
@@ -261,6 +270,12 @@ sap.ui.define([
 		},
 		//Display message on click of messages button
 		_onMessagesButtonPress(evt, closeDelegate) {
+
+			if (!evt) {
+				this._showMultipleMessages();
+				return;
+			}
+
 			this.description = "";
 
 			//Template for displaying the message
@@ -271,9 +286,9 @@ sap.ui.define([
 				description: '{description}',
 				groupName: '{additionalText}'
 			});
-			
+
 			//This enables to show HTML content in detail page.
-			oMessageTemplate.setMarkupDescription(this.markUpDescription);			
+			oMessageTemplate.setMarkupDescription(this.markUpDescription);
 
 			//Messageview setup
 			this.oMessagePopoverView = new MessageView({
@@ -301,14 +316,14 @@ sap.ui.define([
 			});
 
 			const oCloseButton = new Button({
-					text: "Close",
-					press: function () {
-						this.oPopover.close();
-						if (closeDelegate) {
-							closeDelegate.call(this);
-						}
-					}.bind(this)
-				}).addStyleClass("sapUiTinyMarginEnd"),
+				text: "Close",
+				press: function () {
+					this.oPopover.close();
+					if (closeDelegate) {
+						closeDelegate.call(this);
+					}
+				}.bind(this)
+			}).addStyleClass("sapUiTinyMarginEnd"),
 
 				oPopoverBar = new Bar({
 					contentLeft: [oBackButton],
